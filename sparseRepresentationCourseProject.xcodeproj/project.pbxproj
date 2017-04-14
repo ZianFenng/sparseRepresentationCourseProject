@@ -6,10 +6,19 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXFileReference section */
+		3A2F1EFC1EA041480037AE41 /* test.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = test.py; sourceTree = "<group>"; };
+		3A2F1EFD1EA041480037AE41 /* face_recognition.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = face_recognition.py; sourceTree = "<group>"; };
+		3A2F1EFE1EA041480037AE41 /* robust_version.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = robust_version.py; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
 /* Begin PBXGroup section */
 		3A2F1EF51EA0408A0037AE41 = {
 			isa = PBXGroup;
 			children = (
+				3A2F1EFC1EA041480037AE41 /* test.py */,
+				3A2F1EFD1EA041480037AE41 /* face_recognition.py */,
+				3A2F1EFE1EA041480037AE41 /* robust_version.py */,
 			);
 			sourceTree = "<group>";
 		};
