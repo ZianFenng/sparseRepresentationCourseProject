@@ -15,13 +15,15 @@ import time
 # Parameters of the images
 DIM_1 = 192
 DIM_2 = 168
-REDUCEDDIMENSION = 200
-
+REDUCEDDIMENSION = 77
 # Dense Noise
 Epsilon = 1000
 CLASSES = 38
 SAMPLE_EACH_CLASS = 32
-DOWNSAMPLE_COEFFICIENT = 4
+DOWNSAMPLE_COEFFICIENT = 1
+
+CURRPATH = '/Users/LeonGong/Downloads/CroppedYale/'
+STARTOFTRAIN = 25
 
 # Find the sparse solution of SOCP
 def SOCP(y, A, Epsilon):
@@ -32,42 +34,33 @@ def SOCP(y, A, Epsilon):
     err = cvx.Variable(err_size)
     obj = cvx.Minimize(cvx.norm(x,1) + cvx.norm(err,1))
 
-    # constraints = [cvx.norm(y - A*x - err,2) < 1]
-    constraints = [ A*x - err == y]
-    
+    constraints = [A*x - err == y]
+
     start = time.time()
 
     prob = cvx.Problem(obj, constraints)
-    prob.solve(solver='SCS', max_iters = 5, verbose = False)
+    prob.solve(solver='SCS', max_iters = 10, verbose = False)
+    # prob.solve(solver='ECOS_BB', max_iters = 10, verbose = False)
 
     finish = time.time()
-
-    # print "Time took: ", finish - start 
-
-    # print "Status:", prob.status 
-
-    # print "Optimal value with SCS", prob.value 
-
 
     return x.value
 
 def LoadImage():
     # Current Path
-    # currPath = '/Users/LeonGong/Desktop/ELEN6886/CroppedYale/'
-    currPath = '/Users/LeonGong/Downloads/CroppedYale/'
+    # currPath = '/Volumes/Myspace/Courses/sparse/project/Code-Lecture1/FaceIntroDemo/CroppedYale/'
+    currPath = CURRPATH
     # Load the first image
     X_train= []
+
 
     os.chdir(currPath)
     classDirectory = glob.glob("yale*")
 
     # Record the image labels
     delta = [[0 for n in range(SAMPLE_EACH_CLASS*CLASSES)] for m in range(CLASSES)]
-    
-    print('Delta shape: ', np.array(delta).shape)
 
     pos = 0
-    print('classDirectory: ', len(classDirectory))
     # Load images from different classes
     for i in range(len(classDirectory)):
         # List all the class directories
@@ -76,14 +69,13 @@ def LoadImage():
         fileList = glob.glob("*.pgm")
         # Class i
         # Exculde 
-        # for file_item in fileList[10: 10 + SAMPLE_EACH_CLASS]:
-        for file_item in fileList[: SAMPLE_EACH_CLASS]:
+        for file_item in fileList[STARTOFTRAIN : STARTOFTRAIN+SAMPLE_EACH_CLASS]:
             img = Image.open(filePath+'/'+file_item)
             img = block_reduce(np.array(img), block_size=(DOWNSAMPLE_COEFFICIENT, DOWNSAMPLE_COEFFICIENT), func=np.mean)
             
             # Normalization
-            # img = img/np.sqrt(np.sum(img**2))
-            img = (img-np.mean(img))/np.std(img)
+            img = img/np.sqrt(np.sum(img**2))
+            # img = (img-np.mean(img))/np.std(img)
             # print img
 
             # plt.imshow(img, cmap=plt.get_cmap('gray'))
@@ -92,34 +84,36 @@ def LoadImage():
             # plt.show()
        
             X_train.append(np.ndarray.flatten((np.array(img))))
-            # print('i: ', i)
-            # print('pos: ', pos)
             delta[i][pos] = 1
             pos += 1
     # print "Delta, shape:", np.array(delta).shape 
     # print "X_train, shape", np.array(X_train).shape
     return np.array(X_train).T, np.array(delta)
 
+def concenIndex(estimateSolution, X_hat, k):
+    max_i = np.max(np.sum(abs(estimateSolution), axis=0))
+    # print max_i, np.sum(abs(X_hat))
+    return (k*max_i/np.sum(abs(X_hat))-1)/(k-1)
+
+
 def classify(test, X_train, delta):
     X_hat = SOCP(test, X_train, Epsilon)
     # print "X_hat shape", X_hat.shape
     X_hat = np.array(X_hat)
-    # for i in xrange(CLASSES):
-    #     delta_i = np.zeros((CLASSES*SAMPLE_EACH_CLASS))
-    #     delta_i[64*i:64*(i+1)] = X_hat[64*i:64*(i+1)]
-    # print test.shape
-    # test = np.array(test)
-    # print delta.shape
-    residual = X_hat*delta.T
+    
+    estimateSolution = X_hat*delta.T
+    # print estimateSolution.shape
     # print X_train.shape
-    # print "residual shape", residual.shape
+
+    # SCI = concenIndex(estimateSolution, X_hat, 90)
+    # print SCI
 
     testCopy = np.tile(test,(CLASSES,1))
     testCopy = np.transpose(testCopy)
 
     # print "test shape", test.shape, "test copy shape", testCopy.shape 
 
-    mistake = (testCopy - np.dot(X_train, residual)) ** 2
+    mistake = (testCopy - np.dot(X_train, estimateSolution)) ** 2
 
     # print "Mistake matrix: ", mistake 
     # print "Mistake matrix sum: ", np.sum(mistake, axis=0)
@@ -128,8 +122,8 @@ def classify(test, X_train, delta):
 def testAlgo():
     X_train, delta = LoadImage()
     # Current Path
-    # currPath = '/Users/LeonGong/Desktop/ELEN6886/CroppedYale/'
-    currPath = '/Users/LeonGong/Downloads/CroppedYale/'
+    # currPath = '/Volumes/Myspace/Courses/sparse/project/Code-Lecture1/FaceIntroDemo/CroppedYale/'
+    currPath = CURRPATH
     # Load the first image
 
     os.chdir(currPath)
@@ -140,49 +134,44 @@ def testAlgo():
     R_matrix = np.random.randn(REDUCEDDIMENSION, X_train.T.shape[1])
     X_train = np.dot(R_matrix, X_train)
     # print 'R matrix', R_matrix.shape
-    print('X matrix', X_train.shape)
+    # print 'X matrix', X_train.shape
 
     wrongSum = 0
     loop1 = 0
     # Load images from different classes
     for i in range(len(classDirectory)):
         # List all the class directories
-        
         filePath = currPath + classDirectory[i]
         os.chdir(filePath)
         fileList = glob.glob("*.pgm")
-        for loop in range(SAMPLE_EACH_CLASS, len(fileList)):
-        #for loop in range(1,10):
-            start = time.time()
+        for loop in range(0, STARTOFTRAIN):
+            tic = time.time()
             loop1 += 1
             img = Image.open(filePath+'/'+fileList[loop])
-            print(fileList[loop] )
+            # print fileList[loop] 
             img = block_reduce(np.array(img), block_size=(DOWNSAMPLE_COEFFICIENT, DOWNSAMPLE_COEFFICIENT), func=np.mean)
             
             # Normalization
-            # img = img/np.sqrt(np.sum(img**2))
-            img = (img-np.mean(img))/np.std(img)
+            img = img/np.sqrt(np.sum(img**2))
+            # img = (img-np.mean(img))/np.std(img)
             img = np.ndarray.flatten((np.array(img)))
 
             # Calculate y_hat = Ry
             img = np.dot(R_matrix, img)
-
+            
             predictLabel = classify(img.T, X_train, delta)
-            # print('The prediction result:', predictLabel)
-            # print('Correct label: ', i)
             if predictLabel != i:
                 wrongSum += 1
                 print(fileList[loop],' is wrongly classified')
-            finish = time.time()
-            # print('Time for a prediction', finish - start)
-    print('Correctness rate: ', float(wrongSum)/loop1)
+            toc = time.time()
+            # print("Predicting ", fileList[loop])
+            print("Time used ", toc - tic)
+            # predictLabel = classify(img.T, X_train, delta)
+            # print 'The prediction result:', predictLabel
+            # print 'Correct label: ', i
+            wrongSum += (predictLabel != i)
+    print(float(wrongSum)/loop1)
 
 
 if __name__=='__main__':
-    print(testAlgo())
-    
-
-
-
-
-
+    testAlgo()

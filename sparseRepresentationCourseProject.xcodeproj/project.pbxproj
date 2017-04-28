@@ -10,6 +10,8 @@
 		3A2F1EFC1EA041480037AE41 /* test.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = test.py; sourceTree = "<group>"; };
 		3A2F1EFD1EA041480037AE41 /* face_recognition.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = face_recognition.py; sourceTree = "<group>"; };
 		3A2F1EFE1EA041480037AE41 /* robust_version.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = robust_version.py; sourceTree = "<group>"; };
+		3A2F1EFF1EA9807A0037AE41 /* face_recognition_experiment.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = face_recognition_experiment.py; sourceTree = "<group>"; };
+		3A2F1F001EAAA4AA0037AE41 /* high_rate.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = high_rate.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -19,6 +21,8 @@
 				3A2F1EFC1EA041480037AE41 /* test.py */,
 				3A2F1EFD1EA041480037AE41 /* face_recognition.py */,
 				3A2F1EFE1EA041480037AE41 /* robust_version.py */,
+				3A2F1F001EAAA4AA0037AE41 /* high_rate.py */,
+				3A2F1EFF1EA9807A0037AE41 /* face_recognition_experiment.py */,
 			);
 			sourceTree = "<group>";
 		};
